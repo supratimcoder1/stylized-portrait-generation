@@ -1,0 +1,7 @@
+.venv
+colorferet
+__pycache__
+dataset
+sample
+*.zip
+sample_dataset
