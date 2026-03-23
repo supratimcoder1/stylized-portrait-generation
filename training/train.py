@@ -58,7 +58,7 @@ def train_robust_baseline(generator, train_loader, val_loader, epochs=100, devic
     os.makedirs(output_dir, exist_ok=True)
     os.makedirs(checkpoint_dir, exist_ok=True)
     best_val_loss = float('inf')
-    best_model_path = os.path.join(checkpoint_dir, 'best_generator.pth')
+    best_model_path = os.path.join(checkpoint_dir, 'best_model.pth')
 
     for epoch in range(epochs):
         generator.train()
