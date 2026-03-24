@@ -5,4 +5,4 @@ dataset
 sample
 *.zip
 sample_dataset
-*.pth
+checkpoints

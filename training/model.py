@@ -65,3 +65,49 @@ class UNetGenerator(nn.Module):
         u7 = self.up7(torch.cat([u6, d2], 1))
         
         return self.final_up(torch.cat([u7, d1], 1))
+
+def weights_init_normal(m):
+    """
+    Standalone function to initialize the discriminator weights 
+    using a normal distribution (mean=0.0, std=0.02).
+    """
+    classname = m.__class__.__name__
+    if classname.find('Conv') != -1:
+        nn.init.normal_(m.weight.data, 0.0, 0.02)
+    elif classname.find('InstanceNorm2d') != -1:
+        nn.init.normal_(m.weight.data, 1.0, 0.02)
+        nn.init.constant_(m.bias.data, 0.0)
+
+class PatchGANDiscriminator(nn.Module):
+    def __init__(self, in_channels=6, ndf=64):
+        """
+        Input constraint: Concatenation of the conditioning image (3 channels) 
+        and the target/generated image (3 channels) = 6 channels total.
+        Output: N x N patch map indicating Real/Fake (No Sigmoid).
+        """
+        super().__init__()
+
+        def discriminator_block(in_filters, out_filters, normalization=True, stride=2):
+            """Returns layers of each discriminator block"""
+            layers = [nn.Conv2d(in_filters, out_filters, kernel_size=4, stride=stride, padding=1, bias=False)]
+            if normalization:
+                layers.append(nn.InstanceNorm2d(out_filters))
+            layers.append(nn.LeakyReLU(0.2, inplace=True))
+            return layers
+
+        self.model = nn.Sequential(
+            # Input shape: (6, H, W)
+            *discriminator_block(in_channels, ndf, normalization=False), # No norm on first layer
+            *discriminator_block(ndf, ndf * 2),
+            *discriminator_block(ndf * 2, ndf * 4),
+            # Downsample stops here mathematically; stride=1 preserves N x N map size
+            *discriminator_block(ndf * 4, ndf * 8, stride=1),
+            # Final output layer; padding=1 preserves features, outputs 1 channel patch map
+            nn.Conv2d(ndf * 8, 1, kernel_size=4, stride=1, padding=1)
+            # NO Sigmoid layer applied. Handled by BCEWithLogitsLoss.
+        )
+
+    def forward(self, img_condition, img_target_or_fake):
+        # Concatenate condition image and target/generated image along channel dimension
+        img_input = torch.cat((img_condition, img_target_or_fake), dim=1)
+        return self.model(img_input)

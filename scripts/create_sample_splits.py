@@ -2,9 +2,9 @@ import random
 import shutil
 from pathlib import Path
 
-SAMPLE_IMAGES = Path("dataset/images")
-SAMPLE_TARGETS = Path("dataset/targets")
-DATASET_DIR = Path("full_dataset")
+SAMPLE_IMAGES = Path("sample/images")
+SAMPLE_TARGETS = Path("sample/targets")
+DATASET_DIR = Path("sample_dataset")
 
 def split_dataset(train_ratio=0.9):
     train_images_dir = DATASET_DIR / "train_images"
