@@ -14,8 +14,8 @@ try:
 except ImportError:
     mp = None
 
-DEFAULT_INPUT_DIR = Path("filtered_dataset/images")
-DEFAULT_OUTPUT_DIR = Path("filtered_dataset/targets")
+DEFAULT_INPUT_DIR = Path("sample/images")
+DEFAULT_OUTPUT_DIR = Path("sample/targets")
 IMAGE_EXTENSIONS = {".jpg", ".jpeg", ".png", ".bmp", ".webp", ".ppm"}
 
 # MediaPipe landmark indices for high-detail features
