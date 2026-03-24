@@ -8,3 +8,6 @@ sample_dataset
 checkpoints
 full_dataset
 filtered_dataset
+*.png
+*.jpg
+*.jpeg
