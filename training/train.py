@@ -63,7 +63,7 @@ def train_cgan(generator, discriminator, train_loader, val_loader, epochs=100, d
     os.makedirs(output_dir, exist_ok=True)
     os.makedirs(checkpoint_dir, exist_ok=True)
     best_val_loss = float('inf')
-    best_model_path = os.path.join(checkpoint_dir, 'best_generator.pth')
+    best_model_path = os.path.join(checkpoint_dir, 'final_model.pth')
     
     # Set up schedulers right after you define your optimizers
     scheduler_G = torch.optim.lr_scheduler.StepLR(optimizer_G, step_size=25, gamma=0.5)
