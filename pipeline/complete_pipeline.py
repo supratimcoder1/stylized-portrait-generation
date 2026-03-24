@@ -26,10 +26,53 @@ class VectorPortraitPipeline:
 
         self.image_size = 256
 
-    def preprocess(self, image_path: Union[str, Path]) -> torch.Tensor:
-        image = cv2.imread(str(image_path), cv2.IMREAD_UNCHANGED)
+    def apply_style_sliders(
+        self,
+        image: np.ndarray,
+        num_colors: int = 8,
+        edge_weight: float = 0.0,
+        saturation: float = 1.0,
+        contrast: float = 1.0,
+    ) -> np.ndarray:
+        # 1. Contrast adjustment (alpha scaling)
+        if contrast != 1.0:
+            image = cv2.convertScaleAbs(image, alpha=contrast, beta=0)
+
+        # 2. Saturation adjustment
+        if saturation != 1.0:
+            hsv = cv2.cvtColor(image, cv2.COLOR_BGR2HSV).astype(np.float32)
+            hsv[:, :, 1] = np.clip(hsv[:, :, 1] * saturation, 0, 255)
+            image = cv2.cvtColor(hsv.astype(np.uint8), cv2.COLOR_HSV2BGR)
+
+        # 3. Fast posterization (color crunching)
+        if num_colors < 256:
+            step = 256 / num_colors
+            indices = np.floor(image / step)
+            image = (indices * step).astype(np.uint8)
+
+        # 4. Comic book edges
+        if edge_weight > 0:
+            gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+            blurred = cv2.medianBlur(gray, 5)
+            edges = cv2.adaptiveThreshold(
+                blurred, 255, cv2.ADAPTIVE_THRESH_MEAN_C, cv2.THRESH_BINARY, 9, 2
+            )
+            edges_bgr = cv2.cvtColor(edges, cv2.COLOR_GRAY2BGR)
+            image = cv2.addWeighted(image, 1.0, edges_bgr, -edge_weight, 0)
+            image[edges == 0] = [0, 0, 0]
+
+        return image
+
+    def preprocess(self, image_input: Union[str, Path, np.ndarray]) -> torch.Tensor:
+        if isinstance(image_input, np.ndarray):
+            image = image_input.copy()
+            image_source = "provided array"
+        else:
+            image = cv2.imread(str(image_input), cv2.IMREAD_UNCHANGED)
+            image_source = str(image_input)
+
         if image is None:
-            raise FileNotFoundError(f"Could not read image at {image_path}")
+            raise FileNotFoundError(f"Could not read image at {image_source}")
 
         # Match dataset preprocessing used during training
         if image.dtype == np.uint16:
