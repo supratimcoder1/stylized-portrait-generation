@@ -72,11 +72,16 @@ def weights_init_normal(m):
     using a normal distribution (mean=0.0, std=0.02).
     """
     classname = m.__class__.__name__
-    if classname.find('Conv') != -1:
+    if classname.find('Conv') != -1 and hasattr(m, 'weight') and m.weight is not None:
         nn.init.normal_(m.weight.data, 0.0, 0.02)
+        if hasattr(m, 'bias') and m.bias is not None:
+            nn.init.constant_(m.bias.data, 0.0)
     elif classname.find('InstanceNorm2d') != -1:
-        nn.init.normal_(m.weight.data, 1.0, 0.02)
-        nn.init.constant_(m.bias.data, 0.0)
+        # InstanceNorm2d defaults to affine=False, so weight/bias may be None.
+        if hasattr(m, 'weight') and m.weight is not None:
+            nn.init.normal_(m.weight.data, 1.0, 0.02)
+        if hasattr(m, 'bias') and m.bias is not None:
+            nn.init.constant_(m.bias.data, 0.0)
 
 class PatchGANDiscriminator(nn.Module):
     def __init__(self, in_channels=6, ndf=64):
