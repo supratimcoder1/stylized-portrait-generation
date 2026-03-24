@@ -75,7 +75,13 @@ def train_cgan(generator, discriminator, train_loader, val_loader, epochs=100, d
         epoch_g_loss = 0.0
         epoch_d_loss = 0.0
         
-        with tqdm(train_loader, desc=f"Epoch {epoch+1}/{epochs}") as pbar:
+        with tqdm(
+            train_loader,
+            desc=f"Epoch {epoch+1}/{epochs}",
+            ncols=140,
+            bar_format="{l_bar}{bar:60}{r_bar}",
+            mininterval=0.2
+        ) as pbar:
             for real_photos, stylized_targets in pbar:
                 real_photos = real_photos.to(device)
                 stylized_targets = stylized_targets.to(device)
