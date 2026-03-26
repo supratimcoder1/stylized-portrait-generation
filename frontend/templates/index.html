@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Stylized Portrait Generator</title>
+  <link rel="stylesheet" href="/static/css/styles.css" />
+</head>
+<body>
+  <main class="layout">
+    <section class="panel controls">
+      <h1>Stylized Portrait Generator</h1>
+      <p class="subtitle">Upload a portrait and tune the final vector look.</p>
+
+      <form id="stylize-form" enctype="multipart/form-data">
+        <label>Input Image
+          <input type="file" name="image" accept="image/*" required />
+        </label>
+
+        <label>Colors: <span id="colors-value">8</span>
+          <input type="range" name="num_colors" min="2" max="32" value="8" id="colors" />
+        </label>
+
+        <label>Edge Weight: <span id="edge-value">0.0</span>
+          <input type="range" name="edge_weight" min="0" max="1" step="0.1" value="0" id="edge" />
+        </label>
+
+        <label>Saturation: <span id="sat-value">1.0</span>
+          <input type="range" name="saturation" min="0.5" max="2" step="0.1" value="1.0" id="sat" />
+        </label>
+
+        <label>Contrast: <span id="contrast-value">1.0</span>
+          <input type="range" name="contrast" min="0.5" max="2" step="0.1" value="1.0" id="contrast" />
+        </label>
+
+        <button type="submit" id="submit-btn">Generate</button>
+      </form>
+
+      <p class="status" id="status"></p>
+    </section>
+
+    <section class="panel preview">
+      <div class="preview-box">
+        <img id="result-image" alt="Generated output" />
+        <p id="hint">Your generated portrait will appear here.</p>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    const form = document.getElementById('stylize-form');
+    const statusEl = document.getElementById('status');
+    const resultImage = document.getElementById('result-image');
+    const hint = document.getElementById('hint');
+    const submitBtn = document.getElementById('submit-btn');
+
+    const bindSlider = (id, outputId) => {
+      const input = document.getElementById(id);
+      const output = document.getElementById(outputId);
+      input.addEventListener('input', () => {
+        output.textContent = input.value;
+      });
+    };
+
+    bindSlider('colors', 'colors-value');
+    bindSlider('edge', 'edge-value');
+    bindSlider('sat', 'sat-value');
+    bindSlider('contrast', 'contrast-value');
+
+    form.addEventListener('submit', async (event) => {
+      event.preventDefault();
+
+      statusEl.textContent = 'Generating portrait...';
+      submitBtn.disabled = true;
+
+      try {
+        const formData = new FormData(form);
+        const response = await fetch('/api/stylize', {
+          method: 'POST',
+          body: formData,
+        });
+
+        const payload = await response.json();
+        if (!response.ok) {
+          throw new Error(payload.detail || 'Generation failed');
+        }
+
+        resultImage.src = payload.output_url + '?v=' + Date.now();
+        resultImage.style.display = 'block';
+        hint.style.display = 'none';
+        statusEl.textContent = 'Done. Portrait generated.';
+      } catch (error) {
+        statusEl.textContent = error.message;
+      } finally {
+        submitBtn.disabled = false;
+      }
+    });
+  </script>
+</body>
+</html>
